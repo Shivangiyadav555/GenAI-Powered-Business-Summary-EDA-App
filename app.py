@@ -90,28 +90,45 @@ if uploaded_file is not None:
 
     # 📈 Visual Insights Section
     st.header("📊 Visual Insights")
-    numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
-    categorical_cols = df.select_dtypes(include='object').columns.tolist()
 
-    if numeric_cols:
-        st.subheader("Histogram for Numeric Columns")
-        col_to_plot = st.selectbox("Select numeric column for histogram", numeric_cols)
-        fig1 = px.histogram(df, x=col_to_plot, nbins=30, title=f"Histogram of {col_to_plot}")
-        st.plotly_chart(fig1)
+    if "show_viz" not in st.session_state:
+        st.session_state.show_viz = False
 
-        st.subheader("Correlation Heatmap")
-        corr = df[numeric_cols].corr()
-        fig2, ax = plt.subplots()
-        sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
-        st.pyplot(fig2)
+    if st.button("Generate Visualizations"):
+        st.session_state.show_viz = True
 
-    if categorical_cols:
-        st.subheader("Pie Chart for Categorical Columns")
-        cat_col = st.selectbox("Select categorical column for pie chart", categorical_cols)
-        pie_data = df[cat_col].value_counts().reset_index()
-        pie_data.columns = [cat_col, 'count']
-        fig3 = px.pie(pie_data, names=cat_col, values='count', title=f"Distribution of {cat_col}")
-        st.plotly_chart(fig3)
+    if st.session_state.show_viz:
+        numeric_cols = df.select_dtypes(include=np.number).columns.tolist()
+        categorical_cols = df.select_dtypes(include='object').columns.tolist()
+
+        chart_type = st.selectbox("Choose Chart Type", ["Histogram", "Correlation Heatmap", "Pie Chart"])
+
+        if chart_type == "Histogram" and numeric_cols:
+            col_to_plot = st.selectbox("Select numeric column", numeric_cols, key="hist_col")
+            fig1 = px.histogram(df, x=col_to_plot, nbins=30, title=f"Histogram of {col_to_plot}")
+            st.plotly_chart(fig1)
+            hist_bytes = fig1.to_image(format="png")
+            st.download_button("📸 Download Histogram Image", hist_bytes, file_name="histogram.png", mime="image/png")
+
+        elif chart_type == "Correlation Heatmap" and numeric_cols:
+            corr = df[numeric_cols].corr()
+            fig2, ax = plt.subplots()
+            sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
+            st.pyplot(fig2)
+            buf = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+            fig2.savefig(buf.name)
+            with open(buf.name, "rb") as f:
+                st.download_button("📸 Download Heatmap Image", f, file_name="correlation_heatmap.png", mime="image/png")
+
+        elif chart_type == "Pie Chart" and categorical_cols:
+            cat_col = st.selectbox("Select categorical column", categorical_cols, key="pie_col")
+            pie_data = df[cat_col].value_counts().reset_index()
+            pie_data.columns = [cat_col, 'count']
+            fig3 = px.pie(pie_data, names=cat_col, values='count', title=f"Distribution of {cat_col}")
+            st.plotly_chart(fig3)
+            pie_bytes = fig3.to_image(format="png")
+            st.download_button("📸 Download Pie Chart Image", pie_bytes, file_name="pie_chart.png", mime="image/png")
+
 
     # EDA Section
     st.header("📊 Exploratory Data Analysis (EDA) Report")
