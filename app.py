@@ -17,7 +17,7 @@ st.set_page_config(page_title="GenAI-Powered EDA & Email App", layout="wide")
 st.title("📊 GenAI-Powered Business Summary & EDA App")
 
 # === App Access Control ===
-MASTER_APP_PASSWORD = "xwuklxccsnrfxmpo"
+MASTER_APP_PASSWORD = "wuklxccsnrfxmpo"
 if "authenticated" not in st.session_state:
     st.session_state.authenticated = False
 
